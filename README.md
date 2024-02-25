@@ -15,7 +15,7 @@ This is a simple Python application built using Kivy that allows users to select
 1. Clone this repository:
 
     ```bash
-    git clone https://github.com/example/KayNN.git
+    git clone https://github.com/SecondaryProfile/KayNN.git
     ```
 
 2. Install the required dependencies:
