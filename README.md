@@ -21,9 +21,13 @@ This is a simple Python application built using Kivy that allows users to select
 2. Install the required dependencies:
 
     ```bash
-    pip install kivy opencv-python-headless skikit-learn
+    pip install kivy opencv-python skikit-learn
     ```
+3. Note in older versions of MacOS, you must run the following for opencv instead:
 
+   ```bash
+   pip3 install opencv-python==4.6.0.66
+   ```
 ## Usage
 
 1. Navigate to the directory where you cloned the repository:
