@@ -49,9 +49,10 @@ This is a simple Python application built using Kivy that allows users to select
 
 - [Kivy](https://kivy.org/)
 - [OpenCV](https://opencv.org/)
-- [SciKit Learn]()
+- [SciKit Learn](https://scikit-learn.org)
 
 ## TODO
 
-- Fix windows sizes
 - Make output image an export
+- Make the background color match the KNN output color (stupid but fun)
+- Add support for other image types
