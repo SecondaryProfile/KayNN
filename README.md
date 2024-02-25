@@ -1,4 +1,4 @@
-# Color Detection App with Kivy
+# KayNN
 
 This is a simple Python application built using Kivy that allows users to select an image file and determine its dominant color using the K-Means clustering algorithm.
 
