@@ -14,7 +14,7 @@ import platform
 
 class ColorDetectionApp(App):
     def build(self):
-        self.title = 'KayNN'
+        self.title = 'KayNN 1.1'
         self.selected_image = None
         Window.clearcolor = get_color_from_hex('#8b8ba1')
         layout = BoxLayout(orientation='vertical', padding=10)
