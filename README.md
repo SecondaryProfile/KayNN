@@ -43,7 +43,7 @@ This is a simple Python application built using Kivy that allows users to select
 
 ## Screenshots
 
-<img src="screenshots/screenshot.png alt="Screenshot" width="300">
+![App Screenshot](screenshots/screenshot.png)
 
 ## Dependencies
 
