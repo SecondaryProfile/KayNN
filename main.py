@@ -1,96 +1,72 @@
-import PySimpleGUI as sg
-import numpy as np
-from PIL import Image, ImageTk
+from kivy.app import App
+from kivy.uix.boxlayout import BoxLayout
+from kivy.uix.button import Button
+from kivy.uix.label import Label
+from kivy.uix.image import Image
+from kivy.uix.filechooser import FileChooserIconView
+from kivy.graphics.texture import Texture
+from kivy.core.window import Window
 from sklearn.cluster import KMeans
-import sys
-import time
+import cv2
+import numpy as np
+import os
 
-start_time = time.time() * 1000
+class ColorDetectionApp(App):
+    def build(self):
+        self.title = 'Color Detection App'
+        self.selected_image = None
 
-def load_image(filename):
-    return Image.open(filename)
+        layout = BoxLayout(orientation='vertical', padding=10)
 
-def process_image(image):
-    image_array = np.array(image)
+        file_chooser = FileChooserIconView(filters=['*.png', '*.jpg', '*.jpeg', '*.gif'])
+        file_chooser.bind(on_submit=self.on_file_selected)
 
-    flattened_image = image_array.reshape((-1, 3))
+        self.image_preview = Image(allow_stretch=True)
+        layout.add_widget(self.image_preview)
 
-    kmeans = KMeans(n_clusters=1, random_state=42).fit(flattened_image)
-    centroid_color = kmeans.cluster_centers_.astype(int)[0]
+        self.rgb_label = Label(text='RGB: ')
+        self.hex_label = Label(text='Hex: ')
+        layout.add_widget(self.rgb_label)
+        layout.add_widget(self.hex_label)
 
-    processed_image_array = np.full_like(flattened_image, centroid_color)
-    
-    processed_image = processed_image_array.reshape(image_array.shape)
+        detect_button = Button(text='Detect Color', size_hint=(None, None), size=(150, 50))
+        detect_button.bind(on_press=self.detect_color)
+        layout.add_widget(detect_button)
 
-    return Image.fromarray(processed_image), centroid_color
+        layout.add_widget(file_chooser)
+        return layout
 
-def main():
-    sg.theme('LightGrey1')
+    def on_file_selected(self, instance, selection, touch):
+        self.selected_image = selection[0]
+        self.image_preview.source = self.selected_image
 
-    # Splash screen #
-    #---------------#
-    splash_layout = [
-        [sg.Image(filename='logo.png', key="-LOAD-")],
-        [sg.Text("by Third", font=('Trebuchet', 12))],
-        [sg.Text("Version 1.0", font=('Trebuchet', 12))],
-        [sg.Button("OK")]
-    ]
+    def detect_color(self, instance):
+        if self.selected_image:
+            image = cv2.imread(self.selected_image)
+            image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
-    splash_window = sg.Window("KayNN loading...", splash_layout, finalize=True, margins=(5, 5))
+            height, width = image.shape[:2]
+            new_height = int(height * 200 / max(height, width))
+            new_width = int(width * 200 / max(height, width))
+            image = cv2.resize(image, (new_width, new_height))
+            image_flattened = image.reshape((-1, 3))
 
-    splash_event, _ = splash_window.read(timeout=5000)
+            kmeans = KMeans(n_clusters=1)
+            kmeans.fit(image_flattened)
+            dominant_color = kmeans.cluster_centers_[0]
 
-    if splash_event == "OK" or splash_event == sg.WINDOW_CLOSED or (time.time() * 1000 - start_time) > 5000:
-        splash_window.close()
+            dominant_color = np.uint8([[[dominant_color[0], dominant_color[1], dominant_color[2]]]])
 
-    menu_def = [['Theme', ['LightGrey1', 'SystemDefault', 'DarkAmber', 'DarkGreen', 'DarkBlue', 'Black']],
-                ['Help', 'About...']]
+            rgb_value = tuple(dominant_color[0][0][::-1])
 
-    layout = [
-        [sg.Menu(menu_def, tearoff=True)],
-        [sg.Text("Select an image to process:")],
-        [sg.Input(key="-FILE-", enable_events=True, visible=False), sg.FileBrowse()],
-        [sg.Image(key="-IMAGE-")],
-        [sg.Text("Processed Color: ")],
-        [sg.Text("RGB Value:", size=(10, 1)), sg.Text("    ", key="-RGB-")],
-        [sg.Text("HEX Value:", size=(10, 1)), sg.Text("    ", key="-HEX-")],
-        [sg.Button("Process"), sg.Button("Save Result", disabled=True), sg.Button("Change Theme")]
-    ]
+            self.rgb_label.text = f'RGB: {rgb_value}'
+            hex_value = '#{:02x}{:02x}{:02x}'.format(*rgb_value)
+            self.hex_label.text = f'Hex: {hex_value}'
 
-    window = sg.Window("KayNN", layout, resizable=True)
+            texture = Texture.create(size=(1, 1))
+            buffer = np.uint8([[[rgb_value[0], rgb_value[1], rgb_value[2]]]])
+            texture.blit_buffer(buffer.tobytes(), colorfmt='rgb', bufferfmt='ubyte')
+            self.image_preview.texture = texture
 
-    while True:
-        event, values = window.read()
-
-        if event == sg.WINDOW_CLOSED:
-            break
-        elif event == "-FILE-":
-            filename = values["-FILE-"]
-            if filename:
-                image = load_image(filename)
-                window["-IMAGE-"].update(data=ImageTk.PhotoImage(image))
-                window["Save Result"].update(disabled=False)
-        elif event == "Process":
-            if values["-FILE-"]:
-                processed_image, color = process_image(load_image(values["-FILE-"]))
-                window["-IMAGE-"].update(data=ImageTk.PhotoImage(processed_image))
-                window["-RGB-"].update(f"({color[0]}, {color[1]}, {color[2]})")
-                window["-HEX-"].update(f"#{color[0]:02x}{color[1]:02x}{color[2]:02x}")
-        elif event == "Save Result":
-            if values["-FILE-"]:
-                save_filename = sg.popup_get_file("Save processed image as:", save_as=True,
-                                                   file_types=(("PNG files", "*.png"), ("JPEG files", "*.jpg")))
-                if save_filename:
-                    process_image(load_image(values["-FILE-"]))[0].save(save_filename)
-        elif event == "Change Theme":
-            selected_theme = sg.popup_get_text("Enter the theme name:")
-            if selected_theme:
-                sg.theme(selected_theme)
-
-                sg.popup("Theme changed successfully! Please restart the program to apply the changes.")
-                sys.exit()
-
-    window.close()
-
-if __name__ == "__main__":
-    main()
+if __name__ == '__main__':
+    ColorDetectionApp().run()
