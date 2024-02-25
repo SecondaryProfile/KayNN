@@ -22,7 +22,7 @@ class ColorDetectionApp(App):
         logo = Image(source='logo.png', size_hint=(None, None), size=(200, 100), pos_hint={'center_x': 0.5})        
         layout.add_widget(logo)
 
-        file_button = Button(text='Select Image', size_hint=(None, None), size=(150, 50))
+        file_button = Button(text='Select An Image', size_hint=(None, None), size=(150, 50))
         file_button.bind(on_press=self.open_file_chooser)
         layout.add_widget(file_button)
 
