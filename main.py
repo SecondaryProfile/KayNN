@@ -5,17 +5,22 @@ from kivy.uix.label import Label
 from kivy.uix.image import Image
 from kivy.uix.popup import Popup
 from kivy.uix.filechooser import FileChooserListView
+from kivy.utils import get_color_from_hex
 from kivy.graphics.texture import Texture
+from kivy.core.window import Window
 import cv2
 import numpy as np
 import platform
 
 class ColorDetectionApp(App):
     def build(self):
-        self.title = 'Color Detection App'
+        self.title = 'KayNN'
         self.selected_image = None
-
+        Window.clearcolor = get_color_from_hex('#8b8ba1')
         layout = BoxLayout(orientation='vertical', padding=10)
+
+        logo = Image(source='logo.png', size_hint=(None, None), size=(200, 100), pos_hint={'center_x': 0.5})        
+        layout.add_widget(logo)
 
         file_button = Button(text='Select Image', size_hint=(None, None), size=(150, 50))
         file_button.bind(on_press=self.open_file_chooser)
@@ -32,6 +37,9 @@ class ColorDetectionApp(App):
         detect_button = Button(text='Detect Color', size_hint=(None, None), size=(150, 50))
         detect_button.bind(on_press=self.detect_color)
         layout.add_widget(detect_button)
+
+        Window.size = (400, 500)  # Set window size
+        Window.size_hint = (None, None)  # Disable size hint
 
         return layout
 
